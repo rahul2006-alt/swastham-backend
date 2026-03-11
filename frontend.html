@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swastham — Tele-Consultation</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sage:#4a7c59;--sage-l:#6a9e78;--sage-d:#2d5c3a;
+  --cream:#f7f3ee;--white:#fdfaf6;--sand:#e8ddd0;
+  --deep:#1a2318;--muted:#7a8c7e;--accent:#c4824a;
+  --danger:#c0392b;--radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--deep);min-height:100vh}
+
+/* ── shared layout ── */
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex}
+
+/* ── top nav ── */
+.topnav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(253,250,246,0.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--sand);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 28px;
+}
+.nav-logo{font-family:'DM Serif Display',serif;font-size:20px}
+.nav-logo span{color:var(--sage)}
+.nav-user{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.nav-badge{background:var(--sage);color:white;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500}
+.nav-logout{background:none;border:1px solid var(--sand);padding:6px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;color:var(--muted);transition:all .2s}
+.nav-logout:hover{border-color:var(--danger);color:var(--danger)}
+
+/* ── page wrapper ── */
+.page{padding:88px 28px 40px;max-width:960px;margin:0 auto;width:100%}
+.page-title{font-family:'DM Serif Display',serif;font-size:30px;margin-bottom:4px}
+.page-sub{color:var(--muted);font-size:14px;margin-bottom:32px}
+
+/* ── cards ── */
+.card{background:white;border:1px solid var(--sand);border-radius:var(--radius);padding:28px;margin-bottom:16px;box-shadow:0 2px 12px rgba(26,35,24,.04)}
+.card-title{font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* ── forms ── */
+.field{margin-bottom:16px}
+label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+input,select{width:100%;padding:11px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--deep);background:var(--white);outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus{border-color:var(--sage);box-shadow:0 0 0 3px rgba(74,124,89,.1)}
+
+/* ── buttons ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;border:none}
+.btn-primary{background:var(--sage);color:white}
+.btn-primary:hover{background:var(--sage-d);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-outline{background:white;color:var(--sage);border:1.5px solid var(--sage)}
+.btn-outline:hover{background:rgba(74,124,89,.06)}
+.btn-danger{background:var(--danger);color:white}
+.btn-danger:hover{background:#a93226}
+.btn-sm{padding:7px 14px;font-size:13px}
+.btn-full{width:100%;justify-content:center}
+
+/* ── role toggle (login) ── */
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.role-card{border:2px solid var(--sand);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;background:var(--white);text-align:left}
+.role-card:hover{border-color:var(--sage-l)}
+.role-card.active{border-color:var(--sage);background:rgba(74,124,89,.05)}
+.role-icon{font-size:22px;margin-bottom:6px}
+.role-name{font-size:14px;font-weight:600}
+.role-desc{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ── login screen ── */
+#login-screen{align-items:center;justify-content:center;background:var(--white);position:relative}
+#login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 80% 20%,rgba(74,124,89,.08) 0%,transparent 70%),radial-gradient(ellipse 40% 60% at 10% 80%,rgba(196,130,74,.06) 0%,transparent 70%);pointer-events:none}
+.login-card{background:white;border:1px solid var(--sand);border-radius:20px;padding:48px 52px;width:460px;max-width:95vw;box-shadow:0 8px 48px rgba(26,35,24,.07);position:relative;z-index:1;animation:up .5s ease}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.logo-icon{width:36px;height:36px;background:var(--sage);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-text{font-family:'DM Serif Display',serif;font-size:22px}
+.logo-text span{color:var(--sage)}
+.login-title{font-family:'DM Serif Display',serif;font-size:26px;margin-bottom:4px}
+.login-sub{font-size:14px;color:var(--muted);margin-bottom:28px;font-weight:300}
+
+/* ── availability grid ── */
+.day-grid{display:grid;gap:10px}
+.day-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1.5px solid var(--sand);border-radius:10px;background:var(--white)}
+.day-row.active-day{border-color:var(--sage);background:rgba(74,124,89,.04)}
+.day-check{width:18px;height:18px;cursor:pointer;accent-color:var(--sage)}
+.day-label{width:40px;font-size:14px;font-weight:500}
+.day-times{display:flex;align-items:center;gap:8px;flex:1}
+.day-times input{width:110px;padding:7px 10px;font-size:13px}
+.day-times span{color:var(--muted);font-size:13px}
+
+/* ── slots grid ── */
+.slots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:16px}
+.slot-btn{padding:12px 14px;border:1.5px solid var(--sand);border-radius:10px;background:var(--white);cursor:pointer;text-align:left;transition:all .2s;font-family:'DM Sans',sans-serif}
+.slot-btn:hover{border-color:var(--sage);background:rgba(74,124,89,.04)}
+.slot-btn.selected{border-color:var(--sage);background:rgba(74,124,89,.08)}
+.slot-date{font-size:13px;font-weight:600;color:var(--deep)}
+.slot-time{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ── meeting cards ── */
+.meeting-card{background:white;border:1px solid var(--sand);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px;transition:box-shadow .2s}
+.meeting-card:hover{box-shadow:0 4px 20px rgba(26,35,24,.08)}
+.meeting-card.joinable{border-color:var(--sage);background:rgba(74,124,89,.02)}
+.m-info{}
+.m-time{font-size:15px;font-weight:600;color:var(--deep)}
+.m-with{font-size:13px;color:var(--muted);margin-top:3px}
+.m-status{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 10px;border-radius:20px;margin-top:6px;font-weight:500}
+.status-scheduled{background:rgba(74,124,89,.1);color:var(--sage-d)}
+.status-soon{background:rgba(196,130,74,.12);color:#8b5e2a;animation:pulsebg 2s infinite}
+@keyframes pulsebg{0%,100%{background:rgba(196,130,74,.12)}50%{background:rgba(196,130,74,.22)}}
+.m-actions{display:flex;gap:8px;flex-shrink:0}
+
+/* ── session room ── */
+#session-screen{flex-direction:column;height:100vh;background:#0e1510}
+.s-header{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:rgba(26,35,24,.97);border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.s-logo{font-family:'DM Serif Display',serif;color:white;font-size:18px}
+.s-logo span{color:var(--sage-l)}
+.s-info{display:flex;align-items:center;gap:10px}
+.s-dot{width:8px;height:8px;border-radius:50%;background:#4caf50;animation:dot 2s infinite}
+@keyframes dot{0%,100%{box-shadow:0 0 0 0 rgba(76,175,80,.4)}50%{box-shadow:0 0 0 6px rgba(76,175,80,0)}}
+.s-label{font-size:13px;color:rgba(255,255,255,.6)}
+.s-badge{background:rgba(74,124,89,.25);color:var(--sage-l);border:1px solid rgba(74,124,89,.3);padding:3px 10px;border-radius:20px;font-size:12px}
+.s-end{background:var(--danger);color:white;border:none;padding:7px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer}
+.s-end:hover{background:#a93226}
+#hms-iframe{flex:1;width:100%;border:none}
+
+/* ── tabs ── */
+.tabs{display:flex;gap:4px;margin-bottom:28px;background:rgba(74,124,89,.07);padding:4px;border-radius:12px;width:fit-content}
+.tab{padding:9px 20px;border:none;background:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s}
+.tab.active{background:white;color:var(--sage-d);box-shadow:0 1px 6px rgba(0,0,0,.08)}
+
+/* ── empty state ── */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty p{font-size:14px}
+
+/* ── toast ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a2318;color:white;padding:12px 20px;border-radius:10px;font-size:14px;opacity:0;transition:all .3s;z-index:999;max-width:90vw;text-align:center;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:var(--danger)}
+.toast.success{background:var(--sage-d)}
+
+/* ── divider ── */
+.divider{height:1px;background:var(--sand);margin:24px 0}
+.hint{font-size:12px;color:var(--muted);text-align:center}
+
+@media(max-width:600px){
+  .login-card{padding:32px 24px}
+  .meeting-card{flex-direction:column;align-items:flex-start}
+  .page{padding:80px 16px 32px}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════ LOGIN ════════ -->
+<div id="login-screen" class="screen active">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/>
+          <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
+          <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
+        </svg>
+      </div>
+      <div class="logo-text">Swastham <span>Health</span></div>
+    </div>
+    <div class="login-title">Welcome</div>
+    <div class="login-sub">Enter your name to continue — no password needed</div>
+
+    <label>I am joining as</label>
+    <div class="role-grid">
+      <div class="role-card active" id="lrole-patient" onclick="setLoginRole('patient')">
+        <div class="role-icon">🧑‍⚕️</div>
+        <div class="role-name">Patient</div>
+        <div class="role-desc">Book & attend consultations</div>
+      </div>
+      <div class="role-card" id="lrole-provider" onclick="setLoginRole('provider')">
+        <div class="role-icon">👩‍⚕️</div>
+        <div class="role-name">Provider</div>
+        <div class="role-desc">Set availability & consult</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Your name (used as your ID)</label>
+      <input type="text" id="login-name" placeholder="e.g. Rahul Sharma" onkeydown="if(event.key==='Enter') doLogin()" />
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="doLogin()" id="login-btn">
+      Continue →
+    </button>
+    <div class="divider"></div>
+    <p class="hint">Same name = same account. Choose it carefully.</p>
+  </div>
+</div>
+
+<!-- ════════ DASHBOARD ════════ -->
+<div id="dashboard-screen" class="screen" style="flex-direction:column">
+  <nav class="topnav">
+    <div class="nav-logo">Swastham <span>Health</span></div>
+    <div class="nav-user">
+      <span id="nav-name"></span>
+      <span class="nav-badge" id="nav-role"></span>
+      <button class="nav-logout" onclick="logout()">Log out</button>
+    </div>
+  </nav>
+
+  <!-- PATIENT DASHBOARD -->
+  <div id="patient-dash" class="page" style="display:none">
+    <div class="page-title">My Consultations</div>
+    <div class="page-sub">Book a session or join an upcoming one</div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="patientTab('upcoming',this)">Upcoming</button>
+      <button class="tab" onclick="patientTab('book',this)">Book Session</button>
+    </div>
+
+    <!-- Upcoming meetings -->
+    <div id="pt-upcoming">
+      <div id="pt-meetings-list"><div class="empty"><div class="empty-icon">📅</div><p>No upcoming sessions</p></div></div>
+    </div>
+
+    <!-- Book session -->
+    <div id="pt-book" style="display:none">
+      <div class="card">
+        <div class="card-title">🩺 Select Provider</div>
+        <div class="field">
+          <label>Provider</label>
+          <select id="pt-provider-select" onchange="loadSlots()">
+            <option value="">Loading providers...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card" id="slots-card" style="display:none">
+        <div class="card-title">🗓 Available Slots <span style="font-size:12px;color:var(--muted);font-weight:400">— next 14 days, 30 min sessions</span></div>
+        <div id="slots-container"><div class="empty"><p>Select a provider above</p></div></div>
+        <div id="booking-confirm" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--sand)">
+          <div style="font-size:14px;margin-bottom:12px">Selected: <strong id="selected-slot-label"></strong></div>
+          <button class="btn btn-primary" onclick="confirmBooking()" id="confirm-btn">Confirm Booking</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROVIDER DASHBOARD -->
+  <div id="provider-dash" class="page" style="display:none">
+    <div class="page-title">Provider Dashboard</div>
+    <div class="page-sub">Manage your availability and upcoming consultations</div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="providerTab('sessions',this)">My Sessions</button>
+      <button class="tab" onclick="providerTab('availability',this)">Set Availability</button>
+    </div>
+
+    <!-- Sessions -->
+    <div id="pv-sessions">
+      <div id="pv-meetings-list"><div class="empty"><div class="empty-icon">📅</div><p>No upcoming sessions</p></div></div>
+    </div>
+
+    <!-- Availability -->
+    <div id="pv-availability" style="display:none">
+      <div class="card">
+        <div class="card-title">⏰ Weekly Availability</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Set the days and hours you're available. 30-minute slots will be generated automatically.</p>
+        <div class="day-grid" id="day-grid"></div>
+        <div style="margin-top:20px">
+          <button class="btn btn-primary" onclick="saveAvailability()" id="save-avail-btn">Save Availability</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SESSION ROOM ════════ -->
+<div id="session-screen" class="screen">
+  <div class="s-header">
+    <div class="s-logo">Swastham <span>Health</span></div>
+    <div class="s-info">
+      <div class="s-dot"></div>
+      <span class="s-label">Session Live</span>
+      <span class="s-badge" id="s-badge">Consultation</span>
+    </div>
+    <button class="s-end" onclick="endSession()">📵 End Session</button>
+  </div>
+  <iframe id="hms-iframe" allow="camera; microphone; display-capture; fullscreen; clipboard-write"></iframe>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────
+const API = 'https://swastham-backend-production.up.railway.app'; // e.g. https://swastham-backend.up.railway.app
+const HMS_SUBDOMAIN = 'rahul-videoconf-1636';
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+// ── STATE ─────────────────────────────────────────────
+let currentUser = null;
+let selectedSlot = null;
+let currentMeetingId = null;
+let refreshTimer = null;
+
+// ── UTILS ─────────────────────────────────────────────
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className='toast', 3400);
+}
+
+function formatDateTime(iso) {
+  return new Date(iso).toLocaleString('en-IN', {
+    weekday:'short', month:'short', day:'numeric',
+    hour:'2-digit', minute:'2-digit', hour12:true
+  });
+}
+
+function isJoinable(scheduledAt) {
+  const diff = new Date(scheduledAt) - new Date();
+  return diff <= 5*60*1000 && diff >= -30*60*1000; // 5 min before to 30 min after
+}
+
+function show(id) { document.getElementById(id).style.display=''; }
+function hide(id) { document.getElementById(id).style.display='none'; }
+
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: { 'Content-Type':'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  return res.json();
+}
+
+// ── AUTH ──────────────────────────────────────────────
+function setLoginRole(role) {
+  ['patient','provider'].forEach(r => {
+    document.getElementById('lrole-'+r).classList.toggle('active', r===role);
+  });
+  document.getElementById('login-name').dataset.role = role;
+}
+document.getElementById('login-name').dataset.role = 'patient';
+
+async function doLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  const role = document.getElementById('login-name').dataset.role;
+  if (!name) { toast('Please enter your name','error'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+
+  try {
+    const data = await api('/api/login','POST',{name,role});
+    if (data.error) throw new Error(data.error);
+    currentUser = data.user;
+    initDashboard();
+  } catch(e) {
+    toast(e.message || 'Login failed','error');
+    btn.disabled=false; btn.textContent='Continue →';
+  }
+}
+
+function logout() {
+  currentUser = null;
+  clearInterval(refreshTimer);
+  document.getElementById('login-screen').classList.add('active');
+  document.getElementById('dashboard-screen').classList.remove('active');
+  document.getElementById('login-name').value='';
+}
+
+// ── DASHBOARD ─────────────────────────────────────────
+function initDashboard() {
+  document.getElementById('login-screen').classList.remove('active');
+  document.getElementById('dashboard-screen').classList.add('active');
+  document.getElementById('nav-name').textContent = currentUser.name;
+  document.getElementById('nav-role').textContent = currentUser.role === 'provider' ? '🩺 Provider' : '👤 Patient';
+
+  if (currentUser.role === 'provider') {
+    show('provider-dash'); hide('patient-dash');
+    buildDayGrid();
+    loadProviderAvailability();
+    loadProviderMeetings();
+  } else {
+    show('patient-dash'); hide('provider-dash');
+    loadProviders();
+    loadPatientMeetings();
+  }
+
+  // Auto-refresh meetings every 30s
+  refreshTimer = setInterval(() => {
+    if (currentUser?.role === 'provider') loadProviderMeetings();
+    else loadPatientMeetings();
+  }, 30000);
+}
+
+// ── TABS ─────────────────────────────────────────────
+function patientTab(tab, el) {
+  document.querySelectorAll('#patient-dash .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if (tab==='upcoming') { show('pt-upcoming'); hide('pt-book'); }
+  else { hide('pt-upcoming'); show('pt-book'); }
+}
+
+function providerTab(tab, el) {
+  document.querySelectorAll('#provider-dash .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if (tab==='sessions') { show('pv-sessions'); hide('pv-availability'); }
+  else { hide('pv-sessions'); show('pv-availability'); }
+}
+
+// ── MEETINGS ──────────────────────────────────────────
+function renderMeetings(meetings, containerId, userRole) {
+  const c = document.getElementById(containerId);
+  if (!meetings.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><p>No upcoming sessions</p></div>';
+    return;
+  }
+
+  c.innerHTML = meetings.map(m => {
+    const joinable = isJoinable(m.scheduledAt);
+    const other = userRole==='provider' ? m.patientId?.name : m.providerId?.name;
+    const label = userRole==='provider' ? '👤 Patient' : '🩺 Provider';
+    return `
+      <div class="meeting-card ${joinable?'joinable':''}">
+        <div class="m-info">
+          <div class="m-time">${formatDateTime(m.scheduledAt)}</div>
+          <div class="m-with">${label}: <strong>${other||'—'}</strong></div>
+          <span class="m-status ${joinable?'status-soon':'status-scheduled'}">
+            ${joinable ? '🟢 Ready to join' : '🗓 Scheduled'}
+          </span>
+        </div>
+        <div class="m-actions">
+          ${joinable
+            ? `<button class="btn btn-primary btn-sm" onclick="joinSession('${m._id}')">Join Now</button>`
+            : `<button class="btn btn-outline btn-sm" disabled style="opacity:.4;cursor:not-allowed">Join (opens 5 min before)</button>`
+          }
+          <button class="btn btn-sm" style="background:#fff3f3;color:var(--danger);border:1px solid #ffc9c9" onclick="cancelMeeting('${m._id}')">Cancel</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function loadPatientMeetings() {
+  const data = await api(`/api/meetings/user/${currentUser._id}`);
+  renderMeetings(data.meetings||[], 'pt-meetings-list', 'patient');
+}
+
+async function loadProviderMeetings() {
+  const data = await api(`/api/meetings/user/${currentUser._id}`);
+  renderMeetings(data.meetings||[], 'pv-meetings-list', 'provider');
+}
+
+async function cancelMeeting(id) {
+  if (!confirm('Cancel this session?')) return;
+  await api(`/api/meetings/${id}/cancel`, 'PATCH');
+  toast('Session cancelled');
+  loadPatientMeetings(); loadProviderMeetings();
+}
+
+// ── BOOKING ───────────────────────────────────────────
+async function loadProviders() {
+  const data = await api('/api/providers');
+  const sel = document.getElementById('pt-provider-select');
+  if (!data.providers?.length) {
+    sel.innerHTML = '<option value="">No providers available</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">Select a provider…</option>' +
+    data.providers.map(p => `<option value="${p._id}">${p.name}</option>`).join('');
+}
+
+async function loadSlots() {
+  const providerId = document.getElementById('pt-provider-select').value;
+  selectedSlot = null;
+  hide('booking-confirm');
+
+  if (!providerId) { hide('slots-card'); return; }
+  show('slots-card');
+  document.getElementById('slots-container').innerHTML = '<p style="color:var(--muted);font-size:14px">Loading slots…</p>';
+
+  const data = await api(`/api/slots/${providerId}`);
+  const slots = data.slots || [];
+
+  if (!slots.length) {
+    document.getElementById('slots-container').innerHTML = '<div class="empty"><p>No available slots. Provider may not have set availability yet.</p></div>';
+    return;
+  }
+
+  document.getElementById('slots-container').innerHTML = `<div class="slots-grid">${
+    slots.map((s,i) => {
+      const d = new Date(s.start);
+      const dateStr = d.toLocaleDateString('en-IN',{weekday:'short',month:'short',day:'numeric'});
+      const timeStr = d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+      return `<button class="slot-btn" id="slot-${i}" onclick="selectSlot(${i},'${s.start}','${dateStr} ${timeStr}')">
+        <div class="slot-date">${dateStr}</div>
+        <div class="slot-time">${timeStr} · 30 min</div>
+      </button>`;
+    }).join('')
+  }</div>`;
+}
+
+function selectSlot(idx, iso, label) {
+  document.querySelectorAll('.slot-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('slot-'+idx).classList.add('selected');
+  selectedSlot = iso;
+  document.getElementById('selected-slot-label').textContent = label;
+  show('booking-confirm');
+}
+
+async function confirmBooking() {
+  const providerId = document.getElementById('pt-provider-select').value;
+  if (!selectedSlot || !providerId) return;
+
+  const btn = document.getElementById('confirm-btn');
+  btn.disabled=true; btn.textContent='Booking…';
+
+  try {
+    const data = await api('/api/meetings','POST',{
+      providerId, patientId: currentUser._id, scheduledAt: selectedSlot
+    });
+    if (data.error) throw new Error(data.error);
+    toast('✅ Session booked!','success');
+    selectedSlot = null;
+    patientTab('upcoming', document.querySelector('#patient-dash .tab'));
+    loadPatientMeetings();
+  } catch(e) {
+    toast(e.message||'Booking failed','error');
+  } finally {
+    btn.disabled=false; btn.textContent='Confirm Booking';
+  }
+}
+
+// ── AVAILABILITY ──────────────────────────────────────
+function buildDayGrid() {
+  const grid = document.getElementById('day-grid');
+  grid.innerHTML = DAYS.map((day,i) => `
+    <div class="day-row" id="dayrow-${i}">
+      <input type="checkbox" class="day-check" id="day-${i}" onchange="toggleDay(${i})" />
+      <label for="day-${i}" class="day-label" style="cursor:pointer;font-weight:500">${day}</label>
+      <div class="day-times" id="daytimes-${i}" style="opacity:.3;pointer-events:none">
+        <input type="time" id="start-${i}" value="09:00" style="width:110px" />
+        <span>to</span>
+        <input type="time" id="end-${i}" value="17:00" style="width:110px" />
+      </div>
+    </div>`).join('');
+}
+
+function toggleDay(i) {
+  const checked = document.getElementById('day-'+i).checked;
+  const times   = document.getElementById('daytimes-'+i);
+  const row     = document.getElementById('dayrow-'+i);
+  times.style.opacity = checked ? '1' : '.3';
+  times.style.pointerEvents = checked ? 'auto' : 'none';
+  row.classList.toggle('active-day', checked);
+}
+
+async function loadProviderAvailability() {
+  const data = await api(`/api/availability/${currentUser._id}`);
+  (data.slots||[]).forEach(slot => {
+    const cb = document.getElementById('day-'+slot.dayOfWeek);
+    if (!cb) return;
+    cb.checked = true;
+    toggleDay(slot.dayOfWeek);
+    document.getElementById('start-'+slot.dayOfWeek).value = slot.startTime;
+    document.getElementById('end-'+slot.dayOfWeek).value   = slot.endTime;
+  });
+}
+
+async function saveAvailability() {
+  const slots = [];
+  DAYS.forEach((_, i) => {
+    if (document.getElementById('day-'+i).checked) {
+      slots.push({
+        dayOfWeek: i,
+        startTime: document.getElementById('start-'+i).value,
+        endTime:   document.getElementById('end-'+i).value
+      });
+    }
+  });
+
+  const btn = document.getElementById('save-avail-btn');
+  btn.disabled=true; btn.textContent='Saving…';
+
+  try {
+    await api('/api/availability','POST',{ providerId: currentUser._id, slots });
+    toast('✅ Availability saved!','success');
+  } catch(e) {
+    toast('Failed to save','error');
+  } finally {
+    btn.disabled=false; btn.textContent='Save Availability';
+  }
+}
+
+// ── SESSION ───────────────────────────────────────────
+async function joinSession(meetingId) {
+  const data = await api(`/api/meetings/${meetingId}`);
+  const meeting = data.meeting;
+  if (!meeting) { toast('Meeting not found','error'); return; }
+
+  const roomCode = currentUser.role==='provider' ? meeting.hostRoomCode : meeting.guestRoomCode;
+  if (!roomCode) { toast('Room not ready yet','error'); return; }
+
+  currentMeetingId = meetingId;
+  const url = `https://${HMS_SUBDOMAIN}.app.100ms.live/${roomCode}?name=${encodeURIComponent(currentUser.name)}`;
+
+  document.getElementById('s-badge').textContent = currentUser.role==='provider' ? 'Provider' : 'Patient';
+  document.getElementById('hms-iframe').src = url;
+  document.getElementById('dashboard-screen').classList.remove('active');
+  document.getElementById('session-screen').classList.add('active');
+}
+
+function endSession() {
+  document.getElementById('hms-iframe').src='';
+  document.getElementById('session-screen').classList.remove('active');
+  document.getElementById('dashboard-screen').classList.add('active');
+  toast('Session ended. Take care 🌿');
+}
+</script>
+</body>
+</html>
